@@ -13,6 +13,18 @@ class ProjectController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
+    private $validations = [
+        'title'     => 'required|string|min:5|max:100',
+        'url_image' => 'required|url|max:200',
+        'content'   => 'required|string',
+    ];
+
+    private $validation_messages = [
+        'required'  => 'Il campo :attribute è obbligatorio',
+        'min'       => 'Il campo :attribute deve avere almeno :min caratteri',
+        'max'       => 'Il campo :attribute non può superare i :max caratteri',
+        'url'       => 'Il campo deve essere un url valido',
+    ];
     public function index()
     {
         $project = Project::paginate(5);
@@ -27,7 +39,7 @@ class ProjectController extends Controller
      */
     public function create()
     {
-        //
+        return view("admin.projects.create");
     }
 
     /**
@@ -38,7 +50,20 @@ class ProjectController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        // validare i dati del form
+        $request->validate($this->validations, $this->validation_messages);
+
+        $data = $request->all();
+
+        // salvare i dati nel db se validi
+        $newProject = new Project();
+        $newProject->title     = $data['title'];
+        $newProject->url_image = $data['url_image'];
+        $newProject->content   = $data['content'];
+        $newProject->save();
+
+        // ridirezionare su una rotta di tipo get
+        return to_route('admin.projects.show', ['project' => $newProject]);
     }
 
     /**
@@ -60,7 +85,7 @@ class ProjectController extends Controller
      */
     public function edit(Project $project)
     {
-        //
+        return view('admin.projects.edit', compact('project'));
     }
 
     /**
@@ -72,7 +97,20 @@ class ProjectController extends Controller
      */
     public function update(Request $request, Project $project)
     {
-        //
+        // validare i dati del form
+        $request->validate($this->validations, $this->validation_messages);
+
+        $data = $request->all();
+
+        // aggiornare i dati nel db se validi
+        $project->title     = $data['title'];
+        $project->url_image = $data['url_image'];
+        $project->content   = $data['content'];
+        $project->update();
+
+        // ridirezionare su una rotta di tipo get
+        return to_route('admin.projects.show', compact('project'));
+        //['project' => $project]
     }
 
     /**
@@ -83,6 +121,8 @@ class ProjectController extends Controller
      */
     public function destroy(Project $project)
     {
-        //
+        $project->delete();
+
+        return to_route('admin.projects.index')->with('delete_success', $project);
     }
 }
